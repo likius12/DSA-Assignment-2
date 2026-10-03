@@ -1,0 +1,13 @@
+target/
+.gradle/
+*.jar
+*.war
+.ballerina/
+build/
+Dependencies.toml
+Ballerina.lock
+*.log
+.env
+.git/
+.vscode/
+.idea/

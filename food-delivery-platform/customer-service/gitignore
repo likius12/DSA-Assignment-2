@@ -1,0 +1,32 @@
+# --- Secrets ---
+.env
+.env.local
+*.pem
+*.key
+
+# --- Ballerina build artifacts ---
+target/
+Dependencies.toml
+Ballerina.lock
+*.jar
+*.war
+.gradle/
+.ballerina/
+
+# --- IDE / Editor ---
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+
+# --- Node (if you add a frontend later) ---
+node_modules/
+npm-debug.log*

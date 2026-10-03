@@ -2,9 +2,7 @@ name: food-delivery-platform
 
 services:
 
-  
-  # ZOOKEEPER 
-  
+  # ZOOKEEPER
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     container_name: fdp-zookeeper
@@ -22,9 +20,7 @@ services:
       timeout: 5s
       retries: 5
 
- 
   # KAFKA BROKER
-  
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     container_name: fdp-kafka
@@ -33,8 +29,8 @@ services:
       zookeeper:
         condition: service_healthy
     ports:
-      - "9092:9092"     # internal (containers)
-      - "29092:29092"   # external (your host machine)
+      - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -54,9 +50,7 @@ services:
       timeout: 10s
       retries: 10
 
-  
-  # KAFKA UI our browser for topics
-  
+  # KAFKA UI
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: fdp-kafka-ui
@@ -72,9 +66,7 @@ services:
     networks:
       - fdp-network
 
-  
   # MONGODB
-  
   mongodb:
     image: mongo:7.0
     container_name: fdp-mongodb
@@ -94,9 +86,7 @@ services:
       timeout: 10s
       retries: 10
 
-  
-  # MONGO EXPRESS 
-  
+  # MONGO EXPRESS
   mongo-express:
     image: mongo-express:latest
     container_name: fdp-mongo-express
@@ -112,6 +102,25 @@ services:
       ME_CONFIG_BASICAUTH: "false"
     networks:
       - fdp-network
+
+  # CUSTOMER SERVICE
+  customer-service:
+    build:
+      context: ./customer-service
+      dockerfile: Dockerfile
+    container_name: fdp-customer-service
+    hostname: customer-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      MONGO_URI: mongodb://admin:admin123@mongodb:27017
+      PORT: 8081
+    networks:
+      - fdp-network
+    restart: unless-stopped
 
 networks:
   fdp-network:

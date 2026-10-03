@@ -3,3 +3,8 @@ org = "food_delivery"
 name = "customer_service"
 version = "0.1.0"
 distribution = "2201.13.4"
+
+[[dependency]]
+org = "ballerinax"
+name = "mongodb"
+version = "5.2.4"

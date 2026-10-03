@@ -3,3 +3,13 @@ org = "food_delivery"
 name = "notification_service"
 version = "0.1.0"
 distribution = "2201.13.4"
+
+[[dependency]]
+org = "ballerinax"
+name = "mongodb"
+version = "5.2.4"
+
+[[dependency]]
+org = "ballerinax"
+name = "kafka"
+version = "4.4.0"

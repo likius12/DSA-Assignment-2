@@ -24,6 +24,7 @@ Ballerina.lock
 Thumbs.db
 desktop.ini
 
+
 # --- Logs ---
 *.log
 

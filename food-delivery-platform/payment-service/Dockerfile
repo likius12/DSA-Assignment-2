@@ -5,6 +5,6 @@ RUN bal build
 
 FROM ballerina/ballerina:2201.13.4
 WORKDIR /home/ballerina
-COPY --from=build /home/ballerina/target/bin/customer_service.jar .
-EXPOSE 8081
-CMD ["bal", "run", "customer_service.jar"]
+COPY --from=build /home/ballerina/target/bin/payment_service.jar .
+EXPOSE 8084
+CMD ["bal", "run", "payment_service.jar"]

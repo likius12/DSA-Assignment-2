@@ -1,0 +1,55 @@
+{
+  "last_build_time": 1791051749030,
+  "last_update_time": 1791051749030,
+  "last_bal_toml_update_time": 1791006118457,
+  "distribution_version": "2201.13.4",
+  "last_modified_time": {
+    "order_service": 1791051705906
+  },
+  "last_build_options": {
+    "compilationOptions": {
+      "dumpBir": false,
+      "dumpGraph": false,
+      "dumpRawGraphs": false
+    }
+  },
+  "src_meta_info": [
+    {
+      "file": "C:\\Users\\Collin\\Documents\\coding_projects\\distributed_systems\\DSA-Assignment-2\\food-delivery-platform\\order-service\\Ballerina.toml",
+      "hash": "da35ad3a22a936a0a6a6ba7edbdc0355d6bf9fafdac7df8d51f11f710149fcd9",
+      "size": 251,
+      "lastModifiedTime": 1791006118457
+    },
+    {
+      "file": "C:\\Users\\Collin\\Documents\\coding_projects\\distributed_systems\\DSA-Assignment-2\\food-delivery-platform\\order-service\\service.bal",
+      "hash": "0e664f651a6b027e40aedb7bbeccb52ceca9a2d931017e4f660c04ca079ec105",
+      "size": 7199,
+      "lastModifiedTime": 1791051705906
+    }
+  ],
+  "target_exec_meta_info": {
+    "file": "C:\\Users\\Collin\\Documents\\coding_projects\\distributed_systems\\DSA-Assignment-2\\food-delivery-platform\\order-service\\target\\backup\\bin\\order_service.jar",
+    "hash": "54e07e9eebc625bf0b0c90e57e04f4fff980d5fca10a24957de550b379cb5849",
+    "size": 75312553,
+    "lastModifiedTime": 1791051772374
+  },
+  "settings_meta_info": {
+    "file": "C:\\Users\\Collin\\.ballerina\\Settings.toml",
+    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "lastModifiedTime": 1784789218717
+  },
+  "ballerina_toml_meta_info": {
+    "file": "C:\\Users\\Collin\\Documents\\coding_projects\\distributed_systems\\DSA-Assignment-2\\food-delivery-platform\\order-service\\Ballerina.toml",
+    "hash": "da35ad3a22a936a0a6a6ba7edbdc0355d6bf9fafdac7df8d51f11f710149fcd9",
+    "size": 251,
+    "lastModifiedTime": 1791006118457
+  },
+  "imports": [
+    "ballerina/http",
+    "ballerina/log",
+    "ballerina/uuid",
+    "ballerinax/kafka",
+    "ballerinax/mongodb"
+  ]
+}

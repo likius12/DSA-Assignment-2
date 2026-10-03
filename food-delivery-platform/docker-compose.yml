@@ -122,6 +122,27 @@ services:
       - fdp-network
     restart: unless-stopped
 
+  # DELIVERY SERVICE
+  delivery-service:
+    build:
+      context: ./delivery-service
+      dockerfile: Dockerfile
+    container_name: fdp-delivery-service
+    hostname: delivery-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8085:8085"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8085
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
 networks:
   fdp-network:
     driver: bridge

@@ -35,3 +35,29 @@ service /payment on new http:Listener(9090) {
     resource function post .(PaymentRequest request) returns json|error {
         mongodb:Database db = check mongoClient->getDatabase(PAYMENT_DB);
         mongodb:Collection payments = check db->getCollection(PAYMENTS_COLLECTION);
+        
+Payment? existing = check payments->findOne({orderId: request.orderId});
+;
+
+if existing is Payment {
+            if existing.status == "COMPLETED" {
+                log:printInfo("Payment already exists for order: " + request.orderId);
+                return existing;
+            }
+        }
+
+         PaymentResult result = processPayment(request);
+
+        // Create payment record
+        string paymentId = generatePaymentId();
+        Payment payment = {
+            _id: paymentId,
+            orderId: request.orderId,
+            customerId: request.customerId,
+            amount: request.amount,
+            currency: request.currency,
+            paymentMethod: request.paymentMethod,
+            status: result.success ? "COMPLETED" : "FAILED",
+            transactionId: result.transactionId,
+            createdAt: "now"
+        };

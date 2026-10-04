@@ -185,6 +185,28 @@ services:
       - fdp-network
     restart: unless-stopped
 
+  # PAYMENT SERVICE
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: fdp-payment-service
+    hostname: payment-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8084
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
+
 networks:
   fdp-network:
     driver: bridge

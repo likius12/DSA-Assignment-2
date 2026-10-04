@@ -67,7 +67,8 @@ service /api/v1/deliveries on new http:Listener(PORT) {
     resource function get .() returns json|error {
         mongodb:Database db = check mongoClient->getDatabase("delivery_db");
         mongodb:Collection deliveries = check db->getCollection("deliveries");
-        stream<Delivery, error?> deliveryStream = check deliveries->find({});
+        map<json> emptyFilter = {};
+        stream<Delivery, error?> deliveryStream = check deliveries->find(emptyFilter, targetType = Delivery);
         Delivery[] result = [];
         check from Delivery d in deliveryStream
             do {
@@ -96,7 +97,8 @@ service /api/v1/deliveries on new http:Listener(PORT) {
     resource function get drivers() returns json|error {
         mongodb:Database db = check mongoClient->getDatabase("delivery_db");
         mongodb:Collection drivers = check db->getCollection("drivers");
-        stream<Driver, error?> driverStream = check drivers->find({});
+        map<json> emptyFilter = {};
+        stream<Driver, error?> driverStream = check drivers->find(emptyFilter, targetType = Driver);
         Driver[] result = [];
         check from Driver d in driverStream
             do {
@@ -110,15 +112,40 @@ service /api/v1/deliveries on new http:Listener(PORT) {
         mongodb:Collection deliveries = check db->getCollection("deliveries");
         mongodb:Collection drivers = check db->getCollection("drivers");
 
-        Delivery? delivery = check deliveries->findOne({_id: id});
+        map<json> deliveryFilter = {_id: id};
+        Delivery? delivery = check deliveries->findOne(deliveryFilter, targetType = Delivery);
         if delivery is () {
             return error("Delivery not found: " + id);
         }
 
-        map<json> update = {status: "COMPLETED", completedAt: "now"};
-        _ = check deliveries->updateOne({_id: id}, {"$set": update});
+        map<json> deleteDelivery = {_id: id};
+        _ = check deliveries->deleteOne(deleteDelivery);
 
-        _ = check drivers->updateOne({_id: delivery.driverId}, {"$set": {available: true}});
+        map<json> newDelivery = {
+            "_id": delivery._id,
+            "orderId": delivery.orderId,
+            "driverId": delivery.driverId,
+            "status": "COMPLETED",
+            "assignedAt": delivery.assignedAt,
+            "completedAt": "now"
+        };
+        _ = check deliveries->insertOne(newDelivery);
+
+        map<json> driverFilter = {_id: delivery.driverId};
+        Driver? driverRec = check drivers->findOne(driverFilter, targetType = Driver);
+        if driverRec is Driver {
+            map<json> deleteDriver = {_id: driverRec._id};
+            _ = check drivers->deleteOne(deleteDriver);
+
+            map<json> newDriver = {
+                "_id": driverRec._id,
+                "name": driverRec.name,
+                "phone": driverRec.phone,
+                "available": true,
+                "createdAt": driverRec.createdAt
+            };
+            _ = check drivers->insertOne(newDriver);
+        }
 
         check deliveryProducer->send({
             topic: "delivery.completed",
@@ -149,14 +176,26 @@ service on paymentListener {
             map<json> payloadMap = <map<json>>payload;
             string orderId = payloadMap["orderId"].toString();
 
-            Driver? availableDriver = check drivers->findOne({available: true});
+            map<json> driverFilter = {available: true};
+            Driver? availableDriver = check drivers->findOne(driverFilter, targetType = Driver);
             if availableDriver is () {
                 log:printWarn("No available driver for order " + orderId);
                 continue;
             }
 
             string driverId = availableDriver._id;
-            _ = check drivers->updateOne({_id: driverId}, {"$set": {available: false}});
+
+            map<json> deleteDriver = {_id: driverId};
+            _ = check drivers->deleteOne(deleteDriver);
+
+            map<json> newDriver = {
+                "_id": availableDriver._id,
+                "name": availableDriver.name,
+                "phone": availableDriver.phone,
+                "available": false,
+                "createdAt": availableDriver.createdAt
+            };
+            _ = check drivers->insertOne(newDriver);
 
             string deliveryId = uuid:createType1AsString();
             Delivery delivery = {

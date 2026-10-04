@@ -102,8 +102,19 @@ function updateOrderStatus(string orderId, string newStatus) returns error? {
         return;
     }
 
-    map<json> update = {status: newStatus};
-    _ = check ordersColl->updateOne({_id: orderId}, {"$set": update});
+    map<json> deleteFilter = {_id: orderId};
+    _ = check ordersColl->deleteOne(deleteFilter);
+
+    map<json> newDoc = {
+        "_id": existing._id,
+        "customerId": existing.customerId,
+        "restaurantId": existing.restaurantId,
+        "items": existing.items,
+        "totalAmount": existing.totalAmount,
+        "status": newStatus,
+        "createdAt": existing.createdAt
+    };
+    _ = check ordersColl->insertOne(newDoc);
     log:printInfo("Order " + orderId + " -> " + newStatus);
 }
 
@@ -179,8 +190,19 @@ service /api/v1/orders on new http:Listener(PORT) {
             return error("Invalid transition: " + existing.status + " -> " + payload.status);
         }
 
-        map<json> update = {status: payload.status};
-        _ = check ordersColl->updateOne({_id: id}, {"$set": update});
+        map<json> deleteFilter = {_id: id};
+        _ = check ordersColl->deleteOne(deleteFilter);
+
+        map<json> newDoc = {
+            "_id": existing._id,
+            "customerId": existing.customerId,
+            "restaurantId": existing.restaurantId,
+            "items": existing.items,
+            "totalAmount": existing.totalAmount,
+            "status": payload.status,
+            "createdAt": existing.createdAt
+        };
+        _ = check ordersColl->insertOne(newDoc);
         log:printInfo("Order " + id + " manually moved to " + payload.status);
         return {status: payload.status};
     }

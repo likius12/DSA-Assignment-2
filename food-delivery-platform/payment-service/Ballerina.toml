@@ -12,4 +12,4 @@ version = "5.2.4"
 [[dependency]]
 org = "ballerinax"
 name = "kafka"
-version = "4.4.0"
+version = "4.6.4"

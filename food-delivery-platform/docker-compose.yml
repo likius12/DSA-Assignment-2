@@ -206,6 +206,26 @@ services:
       - fdp-network
     restart: unless-stopped
 
+  # RESTAURANT SERVICE
+  restaurant-service:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    container_name: fdp-restaurant-service
+    hostname: restaurant-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8082
+    networks:
+      - fdp-network
+    restart: unless-stopped
 
 networks:
   fdp-network:

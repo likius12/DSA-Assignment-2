@@ -11,3 +11,4 @@ Ballerina.lock
 .git/
 .vscode/
 .idea/
+docker-compose.yml

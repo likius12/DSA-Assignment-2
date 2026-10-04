@@ -1,21 +1,25 @@
 import ballerinax/mongodb;
 
-configurable string mongoUri = "mongodb://localhost:27017";
-configurable string dbName = "restaurant_db";
-
-
-// ...existing code...
-final mongodb:Client mongoClient = check new ({connection: mongoUri});
+mongodb:Client mongoClient = check new ({
+    connection: {
+        serverAddress: {
+            host: "mongodb",
+            port: 27017
+        },
+        auth: <mongodb:ScramSha256AuthCredential>{
+            username: "admin",
+            password: "admin123",
+            database: "admin"
+        }
+    }
+});
 
 function getRestaurantsCollection() returns mongodb:Collection|error {
-    final mongodb:Database db = check mongoClient->getDatabase(dbName);
+    mongodb:Database db = check mongoClient->getDatabase("restaurant_db");
     return check db->getCollection("restaurants");
 }
 
 function getMenuItemsCollection() returns mongodb:Collection|error {
-    final mongodb:Database db = check mongoClient->getDatabase(dbName);
+    mongodb:Database db = check mongoClient->getDatabase("restaurant_db");
     return check db->getCollection("menuItems");
 }
-
-final mongodb:Collection restaurants = check getRestaurantsCollection();
-final mongodb:Collection menuItems = check getMenuItemsCollection();

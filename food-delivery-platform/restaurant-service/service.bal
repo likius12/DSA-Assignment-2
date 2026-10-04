@@ -1,110 +1,147 @@
 import ballerina/http;
+import ballerina/log;
 import ballerina/uuid;
 import ballerinax/mongodb;
 
-configurable int servicePort = 9091;
+configurable int PORT = 8082;
 
-// ---------- Service ----------
-service /api on new http:Listener(servicePort) {
+service /api/v1/restaurants on new http:Listener(PORT) {
 
-    // Create a restaurant
-    resource function post restaurants(RestaurantInput input)
-            returns http:Created|error {
-        Restaurant r = {
-            id: uuid:createType4AsString(),
-            name: input.name,
-            openingHours: input.openingHours,
-            isOpen: true
+    resource function get .() returns Restaurant[]|error {
+        mongodb:Collection restaurants = check getRestaurantsCollection();
+        map<json> emptyFilter = {};
+        stream<Restaurant, error?> restaurantStream = check restaurants->find(emptyFilter, targetType = Restaurant);
+        Restaurant[] result = [];
+        check from Restaurant r in restaurantStream
+            do {
+                result.push(r);
+            };
+        return result;
+    }
+
+    resource function get [string id]() returns Restaurant|error? {
+        mongodb:Collection restaurants = check getRestaurantsCollection();
+        map<json> filter = {_id: id};
+        return check restaurants->findOne(filter, targetType = Restaurant);
+    }
+
+    resource function post .(RestaurantInput payload) returns json|error {
+        mongodb:Collection restaurants = check getRestaurantsCollection();
+        string newId = uuid:createType1AsString();
+
+        Restaurant newRestaurant = {
+            _id: newId,
+            name: payload.name,
+            openingHours: payload.openingHours,
+            isOpen: true,
+            createdAt: "now"
         };
-        check restaurants->insertOne(r);
-        return {body: r};
+
+        _ = check restaurants->insertOne(newRestaurant);
+        log:printInfo("Restaurant created: " + newId);
+        return newRestaurant;
     }
 
-    // Get one restaurant
-    resource function get restaurants/[string id]()
-            returns Restaurant|http:NotFound|error {
-        Restaurant? r = check restaurants->findOne({id: id}, {}, {_id: 0}, Restaurant);
-        if r is () {
-            return http:NOT_FOUND;
-        }
-        return r;
-    }
+    resource function post [string id]/menu(MenuItemInput payload) returns json|error {
+        mongodb:Collection restaurants = check getRestaurantsCollection();
+        mongodb:Collection menuItems = check getMenuItemsCollection();
 
-    // Update opening hours
-    resource function put restaurants/[string id]/hours(OpeningHours hours)
-            returns http:Ok|http:NotFound|error {
-        mongodb:UpdateResult res = check restaurants->updateOne({id: id}, {set: {openingHours: hours}});
-        if res.matchedCount == 0 {
-            return http:NOT_FOUND;
+        map<json> restaurantFilter = {_id: id};
+        Restaurant? restaurant = check restaurants->findOne(restaurantFilter, targetType = Restaurant);
+        if restaurant is () {
+            return error("Restaurant not found: " + id);
         }
-        return http:OK;
-    }
 
-    // Add a menu item
-    resource function post restaurants/[string id]/menu(MenuItemInput input)
-            returns http:Created|http:NotFound|error {
-        Restaurant? r = check restaurants->findOne({id: id}, {}, {_id: 0}, Restaurant);
-        if r is () {
-            return http:NOT_FOUND;
-        }
-        MenuItem item = {
-            id: uuid:createType4AsString(),
+        string itemId = uuid:createType1AsString();
+        MenuItem newItem = {
+            _id: itemId,
             restaurantId: id,
-            name: input.name,
-            price: input.price,
-            stockQty: input.stockQty,
-            available: input.available
+            name: payload.name,
+            price: payload.price,
+            stockQty: payload.stockQty,
+            available: true,
+            createdAt: "now"
         };
-        check menuItems->insertOne(item);
-        http:Created response = {body: item};
-        return response;
+
+        _ = check menuItems->insertOne(newItem);
+
+        check publishMenuUpdated(id);
+
+        log:printInfo("Menu item added: " + itemId + " to restaurant " + id);
+        return newItem;
     }
 
-    // List a restaurant's menu
-    resource function get restaurants/[string id]/menu()
-            returns MenuItem[]|error {
-        stream<MenuItem, error?> items =
-            check menuItems->find({restaurantId: id}, {}, {_id: 0}, MenuItem);
-        return check from MenuItem m in items
-            select m;
+    resource function get [string id]/menu() returns MenuItem[]|error {
+        mongodb:Collection menuItems = check getMenuItemsCollection();
+        map<json> filter = {restaurantId: id};
+        stream<MenuItem, error?> itemStream = check menuItems->find(filter, targetType = MenuItem);
+        MenuItem[] result = [];
+        check from MenuItem m in itemStream
+            do {
+                result.push(m);
+            };
+        return result;
     }
 
-    // Update name / price / availability
-    resource function put menu/[string itemId](MenuItemUpdate update)
-            returns http:Ok|http:NotFound|error {
-        map<json> changes = {};
-        if update.name is string {
-            changes["name"] = update.name;
+    resource function patch menu/[string itemId](MenuItemUpdate payload) returns json|error {
+        mongodb:Collection menuItems = check getMenuItemsCollection();
+
+        map<json> filter = {_id: itemId};
+        MenuItem? existing = check menuItems->findOne(filter, targetType = MenuItem);
+        if existing is () {
+            return error("Menu item not found: " + itemId);
         }
-        if update.price is decimal {
-            changes["price"] = update.price;
+
+        string updatedName = existing.name;
+        decimal updatedPrice = existing.price;
+        int updatedStock = existing.stockQty;
+        boolean updatedAvailable = existing.available;
+
+        string? newName = payload.name;
+        if newName is string {
+            updatedName = newName;
         }
-        if update.available is boolean {
-            changes["available"] = update.available;
+
+        decimal? newPrice = payload.price;
+        if newPrice is decimal {
+            updatedPrice = newPrice;
         }
-        if changes.length() == 0 {
-            return http:OK;
+
+        int? newStock = payload.stockQty;
+        if newStock is int {
+            updatedStock = newStock;
         }
-        mongodb:UpdateResult res = check menuItems->updateOne({id: itemId}, {set: changes});
-        if res.matchedCount == 0 {
-            return http:NOT_FOUND;
+
+        boolean? newAvailable = payload.available;
+        if newAvailable is boolean {
+            updatedAvailable = newAvailable;
         }
-        return http:OK;
+
+        map<json> deleteFilter = {_id: itemId};
+        _ = check menuItems->deleteOne(deleteFilter);
+
+        MenuItem updatedItem = {
+            _id: existing._id,
+            restaurantId: existing.restaurantId,
+            name: updatedName,
+            price: updatedPrice,
+            stockQty: updatedStock,
+            available: updatedAvailable,
+            createdAt: existing.createdAt
+        };
+        _ = check menuItems->insertOne(updatedItem);
+
+        check publishMenuUpdated(existing.restaurantId);
+
+        log:printInfo("Menu item updated: " + itemId);
+        return updatedItem;
     }
 
-    // Set stock quantity
-    resource function patch menu/[string itemId]/stock(StockUpdate update)
-            returns http:Ok|http:NotFound|error {
-        mongodb:UpdateResult res = check menuItems->updateOne({id: itemId}, {set: {stockQty: update.stockQty}});
-        if res.matchedCount == 0 {
-            return http:NOT_FOUND;
-        }
-        return http:OK;
-    }
-
-    // Kitchen marks an order ready -> publishes orders.ready
-    resource function put orders/[string orderId]/ready() returns http:Ok|error {
-        check publishReady(orderId);
-        return http:OK;
+    resource function get health() returns json {
+        return {
+            "status": "UP",
+            "service": "restaurant-service",
+            "timestamp": "now"
+        };
     }
 }

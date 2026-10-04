@@ -3,6 +3,7 @@ import ballerina/log;
 import ballerina/uuid;
 import ballerinax/kafka;
 import ballerinax/mongodb;
+import ballerinax/prometheus as _;
 
 configurable string KAFKA_BROKER = "kafka:9092";
 configurable int PORT = 8083;

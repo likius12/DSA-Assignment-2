@@ -1,8 +1,15 @@
-﻿# Ballerina
-target/
-.gradle/
+﻿# Ballerina build artifacts
+**/target/
+**/Dependencies.toml
+**/Ballerina.lock
 *.balx
-Dependencies.toml.lock
+
+# Compiled binaries
+*.jar
+*.war
+
+# Gradle
+.gradle/
 
 # Logs
 *.log

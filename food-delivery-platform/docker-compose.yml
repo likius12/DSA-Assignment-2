@@ -118,6 +118,7 @@ services:
     environment:
       MONGO_URI: mongodb://admin:admin123@mongodb:27017
       PORT: 8081
+      JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
     restart: unless-stopped
@@ -132,11 +133,140 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+<<<<<<< HEAD
+    ports:
+      - "8085:8085"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8085
+      JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
+  # ORDER SERVICE
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: fdp-order-service
+    hostname: order-service
+    depends_on:
+=======
+>>>>>>> a7e709625982ce20d49ac396f9ef9a5327976c22
       mongodb:
         condition: service_healthy
     ports:
       - "8087:8087"
     environment:
+<<<<<<< HEAD
+      KAFKA_BROKER: kafka:9092
+      PORT: 8083
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
+  # NOTIFICATION SERVICE
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: fdp-notification-service
+    hostname: notification-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8086:8086"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8086
+      JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
+  # PAYMENT SERVICE
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: fdp-payment-service
+    hostname: payment-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8084
+      JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
+  # RESTAURANT SERVICE
+  restaurant-service:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    container_name: fdp-restaurant-service
+    hostname: restaurant-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8082
+      JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
+  # PROMETHEUS
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fdp-prometheus
+    hostname: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
+  # GRAFANA
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fdp-grafana
+    hostname: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+=======
       PORT: 8087
       MONGO_URI: mongodb://admin:admin123@mongodb:27017
       MONGO_DATABASE: admin_db
@@ -146,6 +276,7 @@ services:
       RESTAURANT_SERVICE_URL: http://restaurant-service:8082
       DELIVERY_SERVICE_URL: http://delivery-service:8085
       CUSTOMER_SERVICE_URL: http://customer-service:8081
+>>>>>>> a7e709625982ce20d49ac396f9ef9a5327976c22
     networks:
       - fdp-network
     restart: unless-stopped
@@ -156,3 +287,5 @@ networks:
 
 volumes:
   mongo-data:
+  prometheus-data:
+  grafana-data:

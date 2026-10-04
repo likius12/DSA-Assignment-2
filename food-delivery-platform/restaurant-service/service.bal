@@ -2,6 +2,7 @@ import ballerina/http;
 import ballerina/log;
 import ballerina/uuid;
 import ballerinax/mongodb;
+import ballerinax/prometheus as _;
 
 configurable int PORT = 8082;
 

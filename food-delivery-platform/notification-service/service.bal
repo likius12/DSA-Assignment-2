@@ -1,5 +1,3 @@
-
-ballerina
 import ballerina/http;
 import ballerina/log;
 import ballerina/uuid;
@@ -31,8 +29,7 @@ type Notification record {|
     string sentAt;
 |};
 
-listener kafka:Consumer notificationConsumer = check new ({
-    bootstrapServers: KAFKA_BROKER,
+listener kafka:Listener notificationListener = new (KAFKA_BROKER, {
     groupId: "notification-service-group",
     topics: [
         "orders.created",
@@ -43,15 +40,17 @@ listener kafka:Consumer notificationConsumer = check new ({
         "delivery.completed",
         "restaurant.menu.updated"
     ],
-    clientId: "notification-consumer"
+    pollingInterval: 1,
+    autoCommit: true
 });
 
 service /api/v1/notifications on new http:Listener(PORT) {
 
-    resource function get .() returns json|error {
+    resource function get .() returns Notification[]|error {
         mongodb:Database notificationDb = check mongoClient->getDatabase("notification_db");
         mongodb:Collection notifications = check notificationDb->getCollection("notifications");
-        stream<Notification, error?> notifStream = check notifications->find({});
+        map<json> emptyFilter = {};
+        stream<Notification, error?> notifStream = check notifications->find(emptyFilter, targetType = Notification);
         Notification[] result = [];
         check from Notification n in notifStream
             do {
@@ -61,25 +60,26 @@ service /api/v1/notifications on new http:Listener(PORT) {
     }
 }
 
-service on notificationConsumer {
-    remote function onMessage(kafka:ConsumerRecord[] records) returns error? {
+service on notificationListener {
+    remote function onConsumerRecord(kafka:Caller caller, kafka:BytesConsumerRecord[] records) returns error? {
         mongodb:Database notificationDb = check mongoClient->getDatabase("notification_db");
         mongodb:Collection notifications = check notificationDb->getCollection("notifications");
 
         foreach var rec in records {
-            string payloadStr = rec.value.toString();
+            string payloadStr = check string:fromBytes(rec.value);
             string notifId = uuid:createType1AsString();
+            string topicName = rec.offset.partition.topic;
 
             Notification notification = {
                 _id: notifId,
-                topic: rec.topic,
+                topic: topicName,
                 payload: payloadStr,
                 channel: "SMS",
                 sentAt: "now"
             };
 
             _ = check notifications->insertOne(notification);
-            log:printInfo("NOTIFY [" + rec.topic + "] " + payloadStr);
+            log:printInfo("NOTIFY [" + topicName + "] " + payloadStr);
         }
     }
 }

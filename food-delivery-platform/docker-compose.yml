@@ -122,107 +122,30 @@ services:
       - fdp-network
     restart: unless-stopped
 
-  # DELIVERY SERVICE
-  delivery-service:
+  # ADMIN SERVICE
+  admin-service:
     build:
-      context: ./delivery-service
+      context: ./admin-service
       dockerfile: Dockerfile
-    container_name: fdp-delivery-service
-    hostname: delivery-service
+    container_name: fdp-admin-service
+    hostname: admin-service
     depends_on:
-      mongodb:
-        condition: service_healthy
       kafka:
         condition: service_healthy
-    ports:
-      - "8085:8085"
-    environment:
-      KAFKA_BROKER: kafka:9092
-      PORT: 8085
-    networks:
-      - fdp-network
-    restart: unless-stopped
-
-  # ORDER SERVICE
-  order-service:
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
-    container_name: fdp-order-service
-    hostname: order-service
-    depends_on:
       mongodb:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
     ports:
-      - "8083:8083"
+      - "8087:8087"
     environment:
-      KAFKA_BROKER: kafka:9092
-      PORT: 8083
-    networks:
-      - fdp-network
-    restart: unless-stopped
-
-  # NOTIFICATION SERVICE
-  notification-service:
-    build:
-      context: ./notification-service
-      dockerfile: Dockerfile
-    container_name: fdp-notification-service
-    hostname: notification-service
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    ports:
-      - "8086:8086"
-    environment:
-      KAFKA_BROKER: kafka:9092
-      PORT: 8086
-    networks:
-      - fdp-network
-    restart: unless-stopped
-
-  # PAYMENT SERVICE
-  payment-service:
-    build:
-      context: ./payment-service
-      dockerfile: Dockerfile
-    container_name: fdp-payment-service
-    hostname: payment-service
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    ports:
-      - "8084:8084"
-    environment:
-      KAFKA_BROKER: kafka:9092
-      PORT: 8084
-    networks:
-      - fdp-network
-    restart: unless-stopped
-
-  # RESTAURANT SERVICE
-  restaurant-service:
-    build:
-      context: ./restaurant-service
-      dockerfile: Dockerfile
-    container_name: fdp-restaurant-service
-    hostname: restaurant-service
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    ports:
-      - "8082:8082"
-    environment:
-      KAFKA_BROKER: kafka:9092
-      PORT: 8082
+      PORT: 8087
+      MONGO_URI: mongodb://admin:admin123@mongodb:27017
+      MONGO_DATABASE: admin_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_GROUP_ID: admin-service-group
+      ORDER_SERVICE_URL: http://order-service:8083
+      RESTAURANT_SERVICE_URL: http://restaurant-service:8082
+      DELIVERY_SERVICE_URL: http://delivery-service:8085
+      CUSTOMER_SERVICE_URL: http://customer-service:8081
     networks:
       - fdp-network
     restart: unless-stopped

@@ -1,0 +1,16 @@
+[adminService]
+port = 8087
+
+[adminService.kafka]
+bootstrapServers = "kafka:9092"
+groupId = "admin-service-group"
+
+[adminService.mongo]
+uri = "mongodb://admin-mongo:27017"
+database = "admin_db"
+
+[adminService.services]
+orderServiceUrl = "http://order-service:8083"
+restaurantServiceUrl = "http://restaurant-service:8082"
+deliveryServiceUrl = "http://delivery-service:8085"
+customerServiceUrl = "http://customer-service:8081"

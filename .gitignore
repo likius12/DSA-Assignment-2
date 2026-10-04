@@ -1,0 +1,20 @@
+﻿# Ballerina
+target/
+.gradle/
+*.balx
+Dependencies.toml.lock
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env

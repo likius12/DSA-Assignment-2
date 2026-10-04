@@ -143,6 +143,27 @@ services:
       - fdp-network
     restart: unless-stopped
 
+  # ORDER SERVICE
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: fdp-order-service
+    hostname: order-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      KAFKA_BROKER: kafka:9092
+      PORT: 8083
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
 networks:
   fdp-network:
     driver: bridge

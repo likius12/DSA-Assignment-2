@@ -61,3 +61,28 @@ if existing is Payment {
             transactionId: result.transactionId,
             createdAt: "now"
         };
+
+        // Save to database
+        _ = check payments->insertOne(payment);
+
+        // Publish Kafka event
+        if result.success {
+            check publishPaymentCompleted(payment);
+            log:printInfo("Payment completed: " + paymentId);
+        } else {
+            check publishPaymentFailed(payment, result.message);
+            log:printWarn("Payment failed: " + paymentId);
+        }
+
+         2. GET PAYMENT BY ID
+   
+    resource function get [string paymentId]() returns json|error {
+        mongodb:Database db = check mongoClient->getDatabase(PAYMENT_DB);
+        mongodb:Collection payments = check db->getCollection(PAYMENTS_COLLECTION);
+
+        Payment? payment = check payments->findOne({_id: paymentId});
+        if payment is () {
+            return error("Payment not found: " + paymentId);
+        }
+        return payment;
+

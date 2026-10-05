@@ -19,6 +19,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped # ADDED
 
   # KAFKA BROKER
   kafka:
@@ -49,6 +50,8 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
+      start_period: 30s # ADDED - Give Kafka time to start
+    restart: unless-stopped # ADDED
 
   # KAFKA UI
   kafka-ui:
@@ -65,6 +68,7 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     networks:
       - fdp-network
+    restart: unless-stopped # ADDED
 
   # MONGODB
   mongodb:
@@ -85,6 +89,7 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
+    restart: unless-stopped # ADDED
 
   # MONGO EXPRESS
   mongo-express:
@@ -102,6 +107,7 @@ services:
       ME_CONFIG_BASICAUTH: "false"
     networks:
       - fdp-network
+    restart: unless-stopped # ADDED
 
   # CUSTOMER SERVICE
   customer-service:
@@ -121,7 +127,7 @@ services:
       JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # DELIVERY SERVICE
   delivery-service:
@@ -143,7 +149,7 @@ services:
       JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # ORDER SERVICE
   order-service:
@@ -165,7 +171,7 @@ services:
       JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # NOTIFICATION SERVICE
   notification-service:
@@ -187,7 +193,7 @@ services:
       JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # PAYMENT SERVICE
   payment-service:
@@ -209,7 +215,7 @@ services:
       JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # RESTAURANT SERVICE
   restaurant-service:
@@ -231,7 +237,7 @@ services:
       JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # ADMIN SERVICE
   admin-service:
@@ -250,7 +256,7 @@ services:
       JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # PROMETHEUS
   prometheus:
@@ -268,7 +274,7 @@ services:
       - '--web.enable-lifecycle'
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
   # GRAFANA
   grafana:
@@ -288,7 +294,7 @@ services:
       - prometheus
     networks:
       - fdp-network
-    restart: unless-stopped
+    restart: unless-stopped # ADDED
 
 networks:
   fdp-network:

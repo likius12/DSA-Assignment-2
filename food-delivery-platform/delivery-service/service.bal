@@ -108,18 +108,18 @@ service /api/v1/deliveries on new http:Listener(PORT) {
         return result;
     }
 
-    resource function post [string id]/complete() returns json|error {
+    resource function post [string orderId]/complete() returns json|error {
         mongodb:Database db = check mongoClient->getDatabase("delivery_db");
         mongodb:Collection deliveries = check db->getCollection("deliveries");
         mongodb:Collection drivers = check db->getCollection("drivers");
 
-        map<json> deliveryFilter = {_id: id};
+        map<json> deliveryFilter = {orderId: orderId};
         Delivery? delivery = check deliveries->findOne(deliveryFilter, targetType = Delivery);
         if delivery is () {
-            return error("Delivery not found: " + id);
+            return error("Delivery not found for order: " + orderId);
         }
 
-        map<json> deleteDelivery = {_id: id};
+        map<json> deleteDelivery = {_id: delivery._id};
         _ = check deliveries->deleteOne(deleteDelivery);
 
         map<json> newDelivery = {
@@ -150,11 +150,11 @@ service /api/v1/deliveries on new http:Listener(PORT) {
 
         check deliveryProducer->send({
             topic: "delivery.completed",
-            value: {orderId: delivery.orderId, deliveryId: id, driverId: delivery.driverId}.toString()
+            value: {orderId: delivery.orderId, deliveryId: delivery._id, driverId: delivery.driverId}.toString()
         });
 
-        log:printInfo("Delivery completed: " + id);
-        return {status: "COMPLETED", deliveryId: id};
+        log:printInfo("Delivery completed for order " + orderId);
+        return {status: "COMPLETED", deliveryId: delivery._id};
     }
 }
 

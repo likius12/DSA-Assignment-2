@@ -123,17 +123,18 @@ services:
       - fdp-network
     restart: unless-stopped
 
-  # ADMIN SERVICE
-  admin-service:
+  # DELIVERY SERVICE
+  delivery-service:
     build:
-      context: ./admin-service
+      context: ./delivery-service
       dockerfile: Dockerfile
-    container_name: fdp-admin-service
-    hostname: admin-service
+    container_name: fdp-delivery-service
+    hostname: delivery-service
     depends_on:
+      mongodb:
+        condition: service_healthy
       kafka:
         condition: service_healthy
-<<<<<<< HEAD
     ports:
       - "8085:8085"
     environment:
@@ -152,16 +153,16 @@ services:
     container_name: fdp-order-service
     hostname: order-service
     depends_on:
-=======
->>>>>>> a7e709625982ce20d49ac396f9ef9a5327976c22
       mongodb:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
-      - "8087:8087"
+      - "8083:8083"
     environment:
-<<<<<<< HEAD
       KAFKA_BROKER: kafka:9092
       PORT: 8083
+      JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
     networks:
       - fdp-network
     restart: unless-stopped
@@ -232,6 +233,25 @@ services:
       - fdp-network
     restart: unless-stopped
 
+  # ADMIN SERVICE
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: fdp-admin-service
+    hostname: admin-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8087:8087"
+    environment:
+      PORT: 8087
+      JAVA_OPTS: "-Dballerina.observe.metrics.port=9797"
+    networks:
+      - fdp-network
+    restart: unless-stopped
+
   # PROMETHEUS
   prometheus:
     image: prom/prometheus:latest
@@ -266,17 +286,6 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
-=======
-      PORT: 8087
-      MONGO_URI: mongodb://admin:admin123@mongodb:27017
-      MONGO_DATABASE: admin_db
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      KAFKA_GROUP_ID: admin-service-group
-      ORDER_SERVICE_URL: http://order-service:8083
-      RESTAURANT_SERVICE_URL: http://restaurant-service:8082
-      DELIVERY_SERVICE_URL: http://delivery-service:8085
-      CUSTOMER_SERVICE_URL: http://customer-service:8081
->>>>>>> a7e709625982ce20d49ac396f9ef9a5327976c22
     networks:
       - fdp-network
     restart: unless-stopped

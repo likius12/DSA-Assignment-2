@@ -1,16 +1,7 @@
-[adminService]
-port = 8087
+[ballerina.observe]
+metricsEnabled = true
+metricsReporter = "prometheus"
 
-[adminService.kafka]
-bootstrapServers = "kafka:9092"
-groupId = "admin-service-group"
-
-[adminService.mongo]
-uri = "mongodb://admin-mongo:27017"
-database = "admin_db"
-
-[adminService.services]
-orderServiceUrl = "http://order-service:8083"
-restaurantServiceUrl = "http://restaurant-service:8082"
-deliveryServiceUrl = "http://delivery-service:8085"
-customerServiceUrl = "http://customer-service:8081"
+[ballerinax.prometheus]
+port = 9797
+host = "0.0.0.0"
